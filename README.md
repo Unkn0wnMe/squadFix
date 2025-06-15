@@ -37,7 +37,7 @@ cmake --build build --config Release
 The final executable is located in `build/Release/`.
 
 1.  Navigate to the directory: `cd build/Release`
-2.  **Run `SquadFix.exe` as an Administrator.**
+2.  **Run `squadFix.exe` as an Administrator.**
 
 The app will check for updates and start listening. Press `Ctrl+C` to stop.
 
