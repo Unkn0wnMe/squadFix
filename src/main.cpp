@@ -20,7 +20,7 @@
 
 const std::wstring GITHUB_USER = L"Unkn0wnMe"; 
 const std::wstring GITHUB_REPO = L"squadFix";          
-const std::wstring GITHUB_BRANCH = L"main";             
+const std::wstring GITHUB_BRANCH = L"master";             
 
 const char* TARGET_HOST = "game-files.offworldindustries.com";
 const char* TARGET_PATH = "/squad/serverlist.cfg";
