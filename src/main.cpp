@@ -94,15 +94,6 @@ std::string calculateSHA256(const std::string& filePath) {
     return ss.str();
 }
 
-std::string get_current_gmt_time() {
-    char buf[100] = {0};
-    auto now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-    std::tm gmt_tm;
-    gmtime_s(&gmt_tm, &now);
-    std::strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S GMT", &gmt_tm);
-    return buf;
-}
-
 int main() {
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_SCREEN_BUFFER_INFO consoleInfo;
@@ -167,24 +158,16 @@ int main() {
     std::stringstream buffer;
     buffer << file_stream.rdbuf();
     std::string response_file_content = buffer.str();
-    
     std::stringstream response_stream;
     response_stream << "HTTP/1.1 200 OK\r\n"
-                    << "Server: AmazonS3\r\n"
-                    << "Date: " << get_current_gmt_time() << "\r\n"
-                    << "Content-Type: text/plain\r\n"
-                    << "Content-Length: " << response_file_content.length() << "\r\n"
-                    << "Last-Modified: Fri, 20 Dec 2024 10:00:00 GMT\r\n"
-                    << "ETag: \"a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4\"\r\n"
-                    << "x-amz-request-id: TXJA123BC456DE78\r\n"
-                    << "x-amz-id-2: VpXqR7sFpXl9a/bCdeFgHiJkLmNoPqRsTuVwXyZ01234567890aBcDeF\r\n"
-                    << "Connection: close\r\n"
+                    << "Content-Type: binary/octet-stream\r\n"
+                    << "Connection: keep-alive\r\n"
                     << "\r\n"
                     << response_file_content;
     std::string full_http_response = response_stream.str();
 
     HANDLE handle;
-    char packet[WINDIVERT_MTU_MAX];
+    char packet[65535]; //WINDIVERT_MTU_MAX
     WINDIVERT_ADDRESS addr;
     UINT packet_len;
     const char* filter = "outbound and tcp.DstPort == 80";
@@ -215,7 +198,7 @@ int main() {
         bool is_target_request = (request_str.find(std::string("GET ") + TARGET_PATH) != std::string::npos) && (request_str.find(std::string("Host: ") + TARGET_HOST) != std::string::npos);
         if (is_target_request) {
             SetConsoleTextAttribute(hConsole, COLOR_TARGET);
-            std::cout << "request intercepted! Sending emulated response from " << RESPONSE_FILENAME << "." << std::endl;
+            std::cout << "Request intercepted! Sending emulated response from " << RESPONSE_FILENAME << "." << std::endl;
             SetConsoleTextAttribute(hConsole, DEFAULT_COLOR);
             char response_packet[WINDIVERT_MTU_MAX]; const UINT headers_len = sizeof(WINDIVERT_IPHDR) + sizeof(WINDIVERT_TCPHDR);
             memcpy(response_packet, packet, headers_len);
@@ -226,8 +209,10 @@ int main() {
             size_t response_payload_len = full_http_response.length(); memcpy((char*)response_packet + headers_len, full_http_response.c_str(), response_payload_len);
             UINT new_packet_len = headers_len + (UINT)response_payload_len;
             addr.Outbound = 0;
+            std::cout << new_packet_len << "\n";
             WinDivertHelperCalcChecksums(response_packet, new_packet_len, &addr, 0);
             WinDivertSend(handle, response_packet, new_packet_len, NULL, &addr);
+            std::cout << GetLastError() << "\n";;
             continue;
         }
         WinDivertSend(handle, packet, packet_len, NULL, &addr);
