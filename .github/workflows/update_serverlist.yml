@@ -5,6 +5,9 @@ on:
 
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   update-serverlist:
     runs-on: ubuntu-latest
