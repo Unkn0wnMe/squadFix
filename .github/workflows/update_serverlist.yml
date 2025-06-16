@@ -1,0 +1,32 @@
+name: Update serverlist.cfg
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+
+  workflow_dispatch:
+
+jobs:
+  update-serverlist:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: master
+
+      - name: Download serverlist.cfg
+        run: curl -L -o serverlist.cfg http://game-files.offworldindustries.com/squad/serverlist.cfg
+
+      - name: Calculate hash
+        run: sha256sum serverlist.cfg | awk '{print $1}' > serverlist.cfg.sha
+
+      - name: Commit & push
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          branch: master
+          file_pattern: serverlist.cfg*
+          commit_message: "CI: Update Squad server list and hash"
+          commit_user_name: "GitHub Actions Bot"
+          commit_user_email: "github-actions[bot]@users.noreply.github.com"
+  
