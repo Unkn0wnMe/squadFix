@@ -9,7 +9,6 @@ A lightweight C++ utility to locally serve the Squad server list using **[WinDiv
 -   **Local Server List:** Intercepts requests for `serverlist.cfg` and serves a local version.
 -   **Auto-Updating:** On startup, automatically downloads the latest `serverlist.cfg` from a GitHub repository if the local copy is outdated.
 -   **Zero Interference:** All other network traffic (HTTP/HTTPS) is completely unaffected.
--   **Native & Lightweight:** No external frameworks required. Built with native Windows APIs.
 
 ## Requirements
 
